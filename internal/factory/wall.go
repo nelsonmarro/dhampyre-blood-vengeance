@@ -11,7 +11,6 @@ import (
 	"github.com/solarlune/resolv"
 )
 
-// CreateStaticWall - MODIFIED: Now takes resolv.IShape directly
 func CreateStaticWall(ecs *ecs.ECS, shape *resolv.ConvexPolygon) *donburi.Entry {
 	entry := archetypes.Wall.Spawn(ecs) // Usamos el archetype StaticObject
 	dresolv.SetShape(entry, shape)      // Adjuntamos la forma

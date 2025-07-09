@@ -1,6 +1,8 @@
 package components
 
 import (
+	"time"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/solarlune/resolv" // Import resolv
 	"github.com/yohamta/donburi"
@@ -45,14 +47,34 @@ type VelocityComponent struct {
 	OnGround bool
 }
 
-// Player Component (vacío por ahora)
-var Player = donburi.NewComponentType[PlayerComponent]()
-
 type PlayerComponent struct {
 	IsAttacking bool
 	FacingLeft  bool
-	FacingRight bool
+	IsDead      bool
 }
+
+var Player = donburi.NewComponentType[PlayerComponent]()
+
+type EnemyComponent struct {
+	InitialPosition float64
+	CurrentState    EnemyMovementState
+	StateTimer      *time.Timer
+	MovingLeftNext  bool // Add this line
+	IsDead          bool
+}
+
+// EnemyMovementState represents the current movement state of the enemy.
+type EnemyMovementState int
+
+const (
+	EnemyStateIdle                 EnemyMovementState = 0
+	EnemyStateMovingLeft           EnemyMovementState = 1
+	EnemyStateReturningCenterLeft  EnemyMovementState = 2
+	EnemyStateMovingRight          EnemyMovementState = 3
+	EnemyStateReturningCenterRight EnemyMovementState = 4
+)
+
+var Enemy = donburi.NewComponentType[EnemyComponent]()
 
 type ProjectileComponent struct {
 	Owner  *donburi.Entry

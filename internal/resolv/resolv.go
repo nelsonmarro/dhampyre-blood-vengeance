@@ -9,6 +9,7 @@ import (
 
 var (
 	TagPlayer     = resolv.NewTag("Player")
+	TagEnemy      = resolv.NewTag("Enemy")
 	TagSolidWall  = resolv.NewTag("SolidWall")
 	TagObstacle   = resolv.NewTag("Obstacle")
 	TagPlatform   = resolv.NewTag("Platform")
@@ -33,4 +34,16 @@ func SetShapeCircle(entry *donburi.Entry, obj resolv.IShape) {
 
 func GetShape(entry *donburi.Entry) resolv.IShape {
 	return components.Shape.Get(entry)
+}
+
+// remove shape from space
+func Remove(spaceEntry *donburi.Entry, entries ...*donburi.Entry) {
+	space := components.Space.Get(spaceEntry)
+	for _, shapeEntry := range entries {
+		if shapeEntry.Valid() {
+
+			shape := GetShape(shapeEntry)
+			space.Remove(shape)
+		}
+	}
 }

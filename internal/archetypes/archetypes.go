@@ -22,6 +22,21 @@ var (
 		components.Shape, // Componente para resolv.Shape (renombrado desde ObjectComponent)
 	)
 
+	BackgroundAudio = newArchetype(
+		components.Audio,
+	)
+
+	// Player Archetype (con Tag)
+	Enemy = newArchetype(
+		tags.EnemyTag,
+		components.Enemy,
+		components.Position,
+		components.Sprite,
+		components.Velocity,
+		components.Health,
+		components.Shape, // Componente para resolv.Shape (renombrado desde ObjectComponent)
+	)
+
 	Projectile = newArchetype(
 		tags.Projectile,
 		components.Position,

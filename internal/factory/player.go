@@ -15,22 +15,31 @@ import (
 	dresolv "github.com/nelsonmarro/dhampyre-blood-vengeance/internal/resolv"
 )
 
-func CreatePlayer(ecs *ecs.ECS, idleAnimation *ganim8.Animation, space *donburi.Entry) *donburi.Entry {
+func CreatePlayer(ecs *ecs.ECS, idleAnimation *ganim8.Animation, space *donburi.Entry, initialX, initialY float64) *donburi.Entry {
 	player := archetypes.Player.Spawn(ecs)
 
 	// Initial position
-	initialPosition := &components.PositionComponent{X: float64((configs.C.ScreenWidth / 2) - 300), Y: float64(configs.C.ScreenHeight - (8 * configs.C.TileSize))}
+	initialPosition := &components.PositionComponent{X: initialX, Y: initialY}
 	donburi.Add(player, components.Position, initialPosition)
 
 	// Sprite
 	donburi.Add(player, components.Sprite, &components.SpriteComponent{
-		Animation:         idleAnimation,
-		AnimationName:     "idle",
-		AnimationFinished: false,
+		Animation:     idleAnimation,
+		AnimationName: "idle",
 	})
 
 	// Velocity
 	donburi.Add(player, components.Velocity, &components.VelocityComponent{X: 0, Y: 0})
+
+	// Audio
+	donburi.Add(player, components.Audio, &components.AudioComponent{
+		Data:       nil,
+		Format:     "mp3",
+		Loop:       false,
+		Playing:    false,
+		Volume:     1, // Adjust as needed
+		SampleRate: 48000,
+	})
 
 	// Playrt Input
 	donburi.Add(player, components.PlayerInput, &components.PlayerInputComponent{})
@@ -43,11 +52,7 @@ func CreatePlayer(ecs *ecs.ECS, idleAnimation *ganim8.Animation, space *donburi.
 	// Player Tag
 	components.Player.SetValue(player, components.PlayerComponent{})
 
-	// Create Resolv Shape
-	x := float64((configs.C.ScreenWidth / 2) - 300)
-	y := float64(configs.C.ScreenHeight - (8 * configs.C.TileSize))
-
-	playerShape := resolv.NewRectangle(x, y, float64(configs.C.PlayerSize-50), float64(configs.C.PlayerSize-60))
+	playerShape := resolv.NewRectangle(initialPosition.X, initialPosition.Y, float64(configs.C.PlayerSize-40), float64(configs.C.PlayerSize/2-12))
 	playerShape.Tags().Set(dresolv.TagPlayer)
 	dresolv.SetShape(player, playerShape) // Use AsPolygon() to get a ConvexPolygon
 	dresolv.Add(space, player)

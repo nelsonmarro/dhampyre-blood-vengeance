@@ -30,26 +30,24 @@ func ProjectileCollisionSystemFunc(ecs *ecs.ECS) {
 			return
 		}
 
+		// Create a test shape for the potential new position (using the current position)
 		testShape := projectileShape.Clone()
-		testShape.Move(projectilePosition.X, projectilePosition.Y)
+		testShape.SetPosition(projectilePosition.X-float64(projectileShape.Bounds().Width()/2-60), projectilePosition.Y-float64(projectileShape.Bounds().Height()/2+60))
 
 		// Check for collisions with Obstacles
 		collision := testShape.IntersectionTest(resolv.IntersectionTestSettings{
 			TestAgainst: space.FilterShapes().ByTags(dresolv.TagObstacle),
 			OnIntersect: func(set resolv.IntersectionSet) bool {
 				fmt.Println("Projectile intersected with an obstacle!") // Added log
-				// Move the test shape by the MTV to resolve the collision
+				// Move the test shape by the MTV to resolve the collision (optional for removal)
 				testShape.MoveVec(set.MTV)
 				return true // Continue checking for other collisions
 			},
 		})
 
-		fmt.Printf("Collision detected: %v\n", collision) // Added log
-
 		if collision {
 			// Projectile collided with an obstacle, so remove the projectile entity
 			ecs.World.Remove(entry.Entity())
-			fmt.Println("Projectile removed due to collision.") // Added log
 		}
 	})
 }

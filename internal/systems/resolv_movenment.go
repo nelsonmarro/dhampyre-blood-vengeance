@@ -123,6 +123,6 @@ func ResolvMovementSystemFunc(ecs *ecs.ECS) {
 
 	// Apply the resolved movement
 	shape.SetPositionVec(testShape.Position())
-	position.X = testShape.Position().X + float64(shape.Bounds().Width()/2)
+	position.X = testShape.Position().X + float64(shape.Bounds().Width()/2-13)
 	position.Y = testShape.Position().Y + float64(shape.Bounds().Height()/2)
 }

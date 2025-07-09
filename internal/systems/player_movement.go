@@ -6,6 +6,7 @@ import (
 	"github.com/yohamta/donburi/filter"
 	"github.com/yohamta/ganim8/v2"
 
+	"github.com/nelsonmarro/dhampyre-blood-vengeance/assets/audios"
 	"github.com/nelsonmarro/dhampyre-blood-vengeance/configs"
 	"github.com/nelsonmarro/dhampyre-blood-vengeance/internal/components"
 	"github.com/nelsonmarro/dhampyre-blood-vengeance/internal/factory"
@@ -16,48 +17,53 @@ func PlayerMovementSystemFunc(ecs *ecs.ECS, space *donburi.Entry, runAnimation, 
 
 	playerQuery := donburi.NewQuery(filter.Contains(components.Position, components.Velocity, components.Sprite, components.Player, components.PlayerInput))
 
-	for entry := range playerQuery.Iter(world) {
+	playerQuery.EachEntity(world, func(entry *donburi.Entry) {
 		velocity := components.Velocity.Get(entry)
-		// position := components.Position.Get(entry)
 		sprite := components.Sprite.Get(entry)
 		player := components.Player.Get(entry)
 		input := components.PlayerInput.Get(entry)
 
-		// 1. Update Facing Direction based on Input
+		if player.IsDead {
+			return // Early return if player is dead
+		}
+
+		// Update Facing Direction
 		if input.MovingLeft {
 			player.FacingLeft = true
 		} else if input.MovingRight {
 			player.FacingLeft = false
 		}
 
-		// 2. Set Flipped state based on Facing Direction
+		// Set Flipped state
 		if player.FacingLeft != sprite.Flipped {
 			sprite.Flipped = player.FacingLeft
 		}
 
+		// Attack logic
 		if input.Attacking && !player.IsAttacking && velocity.OnGround && velocity.X == 0 && sprite.AnimationName == "idle" {
 			player.IsAttacking = true
 			sprite.AnimationName = "attack"
 			sprite.Animation = attackAnimation
-			// Ensure the attack animation respects the last facing direction
-			if player.FacingLeft != sprite.Flipped {
-				sprite.Flipped = player.FacingLeft
-			}
 			if sprite.Animation.IsEnd() {
 				sprite.Animation.GoToFrame(1)
 				sprite.Animation.Resume()
 			}
-			// Create a new projectile
 			ownerPosition := components.Position.Get(entry)
 			startX := ownerPosition.X + 8
-			startY := ownerPosition.Y + 15 // Temporarily raise the start Y
-			var velocityX float64 = 5
+			startY := ownerPosition.Y + 15
+			velocityX := 5.0
 			if player.FacingLeft {
 				velocityX = -5
 			}
-			factory.CreateProjectile(ecs, projectileAnimation, entry, startX, startY, velocityX, 0, player.FacingLeft, space)
+			proejectile := factory.CreateProjectile(ecs, projectileAnimation, entry, startX, startY, velocityX, 0, player.FacingLeft, space)
+			projectileAudio := components.Audio.Get(proejectile)
+			projectileAudio.Playing = true
+			projectileAudio.Data = audios.Attack_mp3
+
+			return // Early return after attack
 		}
 
+		// Attack animation end transition
 		if sprite.AnimationName == "attack" && sprite.Animation.IsEnd() {
 			player.IsAttacking = false
 			if velocity.X != 0 {
@@ -69,6 +75,7 @@ func PlayerMovementSystemFunc(ecs *ecs.ECS, space *donburi.Entry, runAnimation, 
 			}
 		}
 
+		// Movement and animation logic when not attacking
 		if !player.IsAttacking {
 			if input.MovingLeft {
 				velocity.X = -2
@@ -100,9 +107,9 @@ func PlayerMovementSystemFunc(ecs *ecs.ECS, space *donburi.Entry, runAnimation, 
 
 		velocity.YSpeed += configs.C.Gravity
 
-		// Transiciones de animación basadas en el estado (si no está atacando)
+		// Animation transitions based on state (if not attacking)
 		if !player.IsAttacking {
-			if velocity.OnGround && sprite.AnimationName == "jump" { // Transición de salto a correr/idle al aterrizar
+			if velocity.OnGround && sprite.AnimationName == "jump" {
 				if velocity.X != 0 {
 					sprite.AnimationName = "run"
 					sprite.Animation = runAnimation
@@ -115,6 +122,5 @@ func PlayerMovementSystemFunc(ecs *ecs.ECS, space *donburi.Entry, runAnimation, 
 				sprite.Animation = jumpAnimation
 			}
 		}
-		// fmt.Println("Animation Name:", sprite.AnimationName) // Para debug
-	}
+	})
 }
